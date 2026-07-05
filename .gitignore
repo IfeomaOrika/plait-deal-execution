@@ -3,3 +3,4 @@ __pycache__/
 output/
 deals.json
 venv/
+.DS_Store
