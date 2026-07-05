@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 2cm; }
+  body { font-family: Helvetica, Arial, sans-serif; color: #1a1a2e; font-size: 11pt; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 3px solid #3d5af1; padding-bottom: 16px; margin-bottom: 28px; }
+  .brand { font-size: 24pt; font-weight: 700; color: #3d5af1; letter-spacing: -0.5px; }
+  .brand-sub { font-size: 9pt; color: #6b7280; margin-top: 2px; }
+  .doc-meta { text-align: right; font-size: 9pt; color: #6b7280; line-height: 1.6; }
+  .doc-meta strong { color: #1a1a2e; }
+  .parties { display: flex; justify-content: space-between; margin-bottom: 28px; }
+  .party-label { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.5px;
+                 color: #9ca3af; margin-bottom: 4px; }
+  .party-name { font-size: 12pt; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  th { text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.5px;
+       color: #9ca3af; border-bottom: 1px solid #e5e7eb; padding: 8px 0; }
+  td { padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+  .right { text-align: right; }
+  .totals { margin-left: auto; width: 45%; }
+  .totals td { border: none; padding: 6px 0; }
+  .totals .grand { border-top: 2px solid #1a1a2e; font-weight: 700; font-size: 13pt; padding-top: 10px; }
+  .terms { margin-top: 32px; font-size: 9pt; color: #4b5563; line-height: 1.6;
+           background: #f9fafb; padding: 16px; border-radius: 6px; }
+  .footer { margin-top: 40px; font-size: 8pt; color: #9ca3af; text-align: center;
+            border-top: 1px solid #e5e7eb; padding-top: 12px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">Plait</div>
+      <div class="brand-sub">Self-serve analytics</div>
+    </div>
+    <div class="doc-meta">
+      <div><strong>Order Form</strong></div>
+      <div>Quote #: {{deal_id}}</div>
+      <div>Date: {{date}}</div>
+      <div>Valid for 30 days</div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div>
+      <div class="party-label">Prepared for</div>
+      <div class="party-name">{{company}}</div>
+      <div style="font-size:10pt; color:#6b7280;">Attn: {{contact}}</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="party-label">Plan</div>
+      <div class="party-name">{{tier}}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Description</th><th class="right">Term</th><th class="right">Annual value</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Plait {{tier}} subscription</td>
+        <td class="right">{{terms}}</td>
+        <td class="right">${{list_price}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="totals">
+    <tr><td>List price</td><td class="right">${{list_price}}</td></tr>
+    <tr><td>Discount ({{discount_pct}}%)</td><td class="right">-${{discount_amt}}</td></tr>
+    <tr class="grand"><td>Annual total</td><td class="right">${{acv}}</td></tr>
+  </table>
+
+  <div class="terms">
+    <strong>Terms:</strong> {{terms_note}} This order form is subject to the Plait
+    Master Subscription Agreement. Pricing reflects the annual commitment shown above.
+  </div>
+
+  <div class="footer">
+    Plait Inc. &middot; This is a portfolio artifact using synthetic data &middot; Not a real commercial document
+  </div>
+</body>
+</html>
