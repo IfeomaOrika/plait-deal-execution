@@ -8,8 +8,14 @@ Gates accumulate: one deal can require several sign-offs.
 """
 
 # --- thresholds (the deal-desk policy, stated plainly) ---
-DISCOUNT_AUTO_LIMIT = 0.15      # up to 15% discount needs no manager
-ENTERPRISE_ACV = 25_000        # at/above this, leadership signs off
+# Discount is tiered, not a single cutoff: a moderate discount a manager can
+# clear, but a deep one threatens margin and escalates to leadership. This
+# mirrors real CPQ practice (manager ~10-15%, director/leadership ~20%+),
+# shifted upward for a self-serve product that runs higher discretionary
+# discounts to close.
+DISCOUNT_AUTO_LIMIT = 0.15     # up to 15% -> auto, no approval
+DISCOUNT_MANAGER_LIMIT = 0.30  # 15-30% -> sales manager; above 30% -> leadership
+ENTERPRISE_ACV = 25_000        # at/above this, leadership signs off (~3x a typical deal)
 STANDARD_TERMS = {"monthly", "annual"}
 
 
@@ -24,16 +30,18 @@ def route_deal(deal):
     if deal["tier"] == "Free":
         return {"decision": "no_quote", "gates": [], "reason": "Free tier"}
 
-    # discount above the auto band -> sales manager
-    if deal["discount"] > DISCOUNT_AUTO_LIMIT:
-        gates.append("sales_manager")
+    # discount is tiered: moderate -> manager, deep -> leadership
+    if deal["discount"] > DISCOUNT_MANAGER_LIMIT:
+        gates.append("leadership")        # deep discount: margin risk
+    elif deal["discount"] > DISCOUNT_AUTO_LIMIT:
+        gates.append("sales_manager")     # moderate discount
 
-    # non-standard terms -> finance
+    # non-standard terms -> finance (billing / revenue-recognition risk)
     if deal["terms"] not in STANDARD_TERMS:
         gates.append("finance")
 
-    # large deal -> leadership, regardless of the above
-    if deal["acv"] >= ENTERPRISE_ACV:
+    # large deal -> leadership, regardless of discount
+    if deal["acv"] >= ENTERPRISE_ACV and "leadership" not in gates:
         gates.append("leadership")
 
     if not gates:
@@ -46,12 +54,14 @@ def route_deal(deal):
 if __name__ == "__main__":
     tests = [
         # (label, deal, expected gates)
-        ("standard clean",      {"tier": "Team",     "acv": 6000,  "discount": 0.10, "terms": "annual"},  []),
-        ("discount over band",  {"tier": "Business", "acv": 12000, "discount": 0.30, "terms": "annual"},  ["sales_manager"]),
-        ("non-standard terms",  {"tier": "Team",     "acv": 8000,  "discount": 0.10, "terms": "custom"},  ["finance"]),
-        ("enterprise size",     {"tier": "Business", "acv": 40000, "discount": 0.10, "terms": "annual"},  ["leadership"]),
-        ("deep discount + big", {"tier": "Business", "acv": 50000, "discount": 0.35, "terms": "custom"},  ["sales_manager", "finance", "leadership"]),
-        ("free tier",           {"tier": "Free",     "acv": 0,     "discount": 0.0,  "terms": "monthly"}, []),
+        ("standard clean",       {"tier": "Team",     "acv": 6000,  "discount": 0.10, "terms": "annual"},  []),
+        ("moderate discount",    {"tier": "Business", "acv": 12000, "discount": 0.22, "terms": "annual"},  ["sales_manager"]),
+        ("deep discount",        {"tier": "Business", "acv": 12000, "discount": 0.40, "terms": "annual"},  ["leadership"]),
+        ("non-standard terms",   {"tier": "Team",     "acv": 8000,  "discount": 0.10, "terms": "custom"},  ["finance"]),
+        ("enterprise size",      {"tier": "Business", "acv": 40000, "discount": 0.10, "terms": "annual"},  ["leadership"]),
+        ("moderate + big + odd", {"tier": "Business", "acv": 50000, "discount": 0.22, "terms": "custom"},  ["sales_manager", "finance", "leadership"]),
+        ("deep + big (no dup)",  {"tier": "Business", "acv": 50000, "discount": 0.40, "terms": "annual"},  ["leadership"]),
+        ("free tier",            {"tier": "Free",     "acv": 0,     "discount": 0.0,  "terms": "monthly"}, []),
     ]
 
     for label, deal, expected in tests:
